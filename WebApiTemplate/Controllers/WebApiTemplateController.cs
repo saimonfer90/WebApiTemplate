@@ -9,7 +9,7 @@ namespace WebApiTemplate.Controllers
     [Route("[controller]")]
     public class WebApiTemplateController : ControllerBase
     {
-        private WebApiTemplateCore _core;
+        private readonly WebApiTemplateCore _core;
 
         public WebApiTemplateController()
         {
