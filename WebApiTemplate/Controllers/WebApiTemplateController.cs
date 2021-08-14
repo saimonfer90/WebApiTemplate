@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using SimpleInjector;
 using WebApiTemplate.Core;
 
 namespace WebApiTemplate.Controllers
@@ -10,10 +11,13 @@ namespace WebApiTemplate.Controllers
     public class WebApiTemplateController : ControllerBase
     {
         private readonly WebApiTemplateCore _core;
+        private readonly Container  _serviceContainer;
 
-        public WebApiTemplateController()
+        public WebApiTemplateController(Container serviceContainer)
         {
-            _core = new();
+            _serviceContainer = serviceContainer;
+
+            _core = _serviceContainer.GetInstance<WebApiTemplateCore>();
         }
 
         [HttpPost]

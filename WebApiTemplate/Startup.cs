@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using SimpleInjector;
 
 namespace WebApiTemplate
 {
@@ -16,7 +18,8 @@ namespace WebApiTemplate
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        private Container _serviceContainer;
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
@@ -24,9 +27,17 @@ namespace WebApiTemplate
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApiTemplate", Version = "v1" });
             });
+
+            _serviceContainer = InjectionConfigurator.GetContainerService();
+
+            services.AddSimpleInjector(_serviceContainer, options =>
+            {
+                options.AddAspNetCore();
+            });
+
+            _serviceContainer.InitializeContainer();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -46,6 +57,12 @@ namespace WebApiTemplate
             {
                 endpoints.MapControllers();
             });
+
+            app.UseSimpleInjector(_serviceContainer);
+
+            _serviceContainer.Verify();
+
+            var logger = _serviceContainer.GetInstance<ILogger>();
         }
     }
 }
