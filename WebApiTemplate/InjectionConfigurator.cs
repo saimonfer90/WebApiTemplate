@@ -1,8 +1,10 @@
 ﻿using System;
 using Microsoft.Extensions.Configuration;
+using Npgsql;
 using Serilog;
 using SimpleInjector;
 using WebApiTemplate.Core;
+using WebApiTemplate.Data;
 
 namespace WebApiTemplate
 {
@@ -22,6 +24,14 @@ namespace WebApiTemplate
             Func<ILogger> loggerFactory = new (() => new LoggerConfiguration()
                 .ReadFrom.Configuration(customConfig, sectionName: "WebApiTemplate:Serilog")
                 .CreateLogger());
+
+            Func<string, DbHandler<NpgsqlConnection>> postgresClientFactory = new (connectionStringName =>
+            {
+                var instanceLogger = container.GetInstance<ILogger>();
+                var cstring = customConfig.GetSection($"WebApiTemplate:WebApiTemplate:{connectionStringName}").Value;
+
+                return (DbHandler<NpgsqlConnection>)(new(instanceLogger, cstring));
+            });
 
             container.Register<ILogger>(loggerFactory, Lifestyle.Transient);
             container.Register<WebApiTemplateCore>(Lifestyle.Transient);
