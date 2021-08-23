@@ -14,14 +14,17 @@ namespace WebApiTemplate.Data
         /// </summary>
         private readonly ILogger _logger;
 
+        private readonly string _connectionString;
+
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="logger">System logger, if null is not used by class</param>
         /// <param name="dbConnection">connection</param>
-        public DbHandler(ILogger logger)
+        public DbHandler(ILogger logger, string connectionString)
         {
             _logger = logger;
+            _connectionString = connectionString;
         }
 
         /// <summary>
@@ -36,6 +39,8 @@ namespace WebApiTemplate.Data
             try
             {
                 using var connection = new ConnectionInstance();
+
+                connection.ConnectionString = _connectionString;
 
                 result.AddRange(await connection.QueryAsync<T>(query)
                     .ConfigureAwait(false));
@@ -61,18 +66,23 @@ namespace WebApiTemplate.Data
         /// <param name="parameters">Parameters to replace, example: [ 1, "hello" ]</param>
         /// <param name="isolationLevel">Set the transaction lock</param>
         /// <returns>Number of affected rows</returns>
-        public async Task<int> ExecuteNonQueryAsync(string nonQuery, bool throwException = true, IsolationLevel isolationLevel = IsolationLevel.Serializable)
+        public async Task<int> ExecuteNonQueryAsync(string nonQuery, object parameters = null, bool throwException = true, IsolationLevel isolationLevel = IsolationLevel.Serializable)
         {
             int affected = 0;
             IDbTransaction transaction = null;
+
             try
             {
                 using var connection = new ConnectionInstance();
+                connection.ConnectionString = _connectionString;
 
+                connection.Open();
                 transaction = connection.BeginTransaction(isolationLevel);
 
-                affected = await connection.ExecuteAsync(nonQuery)
+                affected = await connection.ExecuteAsync(nonQuery, parameters)
                     .ConfigureAwait(false);
+
+                transaction.Commit();
             }
             catch (Exception ex)
             {
