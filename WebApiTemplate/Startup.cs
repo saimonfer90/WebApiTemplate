@@ -22,6 +22,7 @@ namespace WebApiTemplate
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -47,7 +48,18 @@ namespace WebApiTemplate
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApiTemplate v1"));
             }
 
+            app.UseCors(options =>
+            {
+                options.AllowAnyMethod().AllowAnyHeader();
+                options.SetIsOriginAllowed((host) => true);
+                options.AllowCredentials();
+            });
+
             app.UseHttpsRedirection();
+
+            app.UseDefaultFiles();
+
+            app.UseStaticFiles();
 
             app.UseRouting();
 
