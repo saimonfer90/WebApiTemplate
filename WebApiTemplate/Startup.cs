@@ -4,8 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using Serilog;
+using Prometheus;
 using SimpleInjector;
+using WebApiTemplate.Metrics;
 
 namespace WebApiTemplate
 {
@@ -27,6 +28,10 @@ namespace WebApiTemplate
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApiTemplate", Version = "v1" });
             });
+
+            services.AddHealthChecks()
+                .AddCheck("Memory", new SystemMemoryHealthCheck())
+                .ForwardToPrometheus();
 
             _serviceContainer = InjectionConfigurator.GetContainerService();
 
@@ -56,13 +61,12 @@ namespace WebApiTemplate
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapMetrics();
             });
 
             app.UseSimpleInjector(_serviceContainer);
 
             _serviceContainer.Verify();
-
-            var logger = _serviceContainer.GetInstance<ILogger>();
         }
     }
 }
