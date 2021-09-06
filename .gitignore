@@ -361,3 +361,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# For svelte
+/node_modules/
+/public/build/
+package-lock.json
+
+.DS_Store
